@@ -1,4 +1,3 @@
-
 import os
 import json
 from datetime import datetime
@@ -11,12 +10,10 @@ from requests_futures.sessions import FuturesSession
 from usgs import USGS_API, USGSError, USGSAuthExpiredError, __version__
 from usgs import payloads
 
-
 TMPFILE = os.path.join(os.path.expanduser("~"), ".usgs")
 
 
 def _get_api_key(api_key):
-
     if api_key is None and os.path.exists(TMPFILE):
         with open(TMPFILE, "r") as f:
             api_key_info = json.load(f)
@@ -24,8 +21,8 @@ def _get_api_key(api_key):
 
     return api_key
 
-def _check_for_usgs_error(data):
 
+def _check_for_usgs_error(data):
     error_code = data['errorCode']
     if error_code is None:
         return
@@ -36,6 +33,7 @@ def _check_for_usgs_error(data):
         raise USGSAuthExpiredError("API key has expired. Try logging out and logging back in.")
 
     raise USGSError('%s: %s' % (error_code, error))
+
 
 def _create_session(api_key):
     api_key = _get_api_key(api_key)
@@ -53,6 +51,7 @@ def _create_session(api_key):
 
     return session
 
+
 def dataset_filters(dataset, api_key=None):
     api_key = _get_api_key(api_key)
     session = _create_session(api_key)
@@ -67,6 +66,7 @@ def dataset_filters(dataset, api_key=None):
 
     return response
 
+
 def download_options(dataset, entity_ids, api_key=None):
     api_key = _get_api_key(api_key)
     session = _create_session(api_key)
@@ -80,6 +80,7 @@ def download_options(dataset, entity_ids, api_key=None):
     _check_for_usgs_error(response)
 
     return response
+
 
 def dataset_download_options(dataset, api_key=None):
     """
@@ -102,6 +103,7 @@ def dataset_download_options(dataset, api_key=None):
 
     return response
 
+
 def download_request(dataset, entity_id, product_id, api_key=None):
     """
     This method is used to insert the requested downloads into the download queue
@@ -120,6 +122,7 @@ def download_request(dataset, entity_id, product_id, api_key=None):
 
     return response
 
+
 def dataset_search(dataset=None, catalog=None, ll=None, ur=None, start_date=None, end_date=None, api_key=None):
     api_key = _get_api_key(api_key)
     session = _create_session(api_key)
@@ -136,10 +139,11 @@ def dataset_search(dataset=None, catalog=None, ll=None, ur=None, start_date=None
 
     return response
 
+
 def login(username, password, save=True):
     """
     Log in, creating a temporary API key and optionally storing it for later use.
-    
+
     :param str username: Username of the USGS account to log in with.
     :param str password: Password of the USGS account to log in with.
     :param bool save: If true, the API key will be stored in a local file (~/.usgs)
@@ -152,7 +156,7 @@ def login(username, password, save=True):
 
     session = _create_session(api_key=None)
     created = datetime.now().isoformat()
-    
+
     r = session.post(url, payload)
     response = r.json()
 
@@ -172,13 +176,14 @@ def login(username, password, save=True):
 
     return response
 
+
 def logout():
     """
     Log out by deactivating and removing the stored API key, if one exists.
     """
     if not os.path.exists(TMPFILE):
         return
-    
+
     url = '{}/logout'.format(USGS_API)
     session = _create_session(api_key=None)
 
@@ -193,6 +198,7 @@ def logout():
     os.remove(TMPFILE)
 
     return response
+
 
 def scene_metadata(dataset, entity_id, api_key=None):
     """
@@ -216,11 +222,11 @@ def scene_metadata(dataset, entity_id, api_key=None):
 
 
 def scene_search(dataset,
-        max_results=5000, metadata_type=None,
-        start_date=None, end_date=None,
-        ll=None, ur=None,
-        lat=None, lng=None, distance=100,
-        where=None, starting_number=1, sort_order="DESC", api_key=None):
+                 max_results=5000, metadata_type=None,
+                 start_date=None, end_date=None,
+                 ll=None, ur=None,
+                 lat=None, lng=None, distance=100,
+                 where=None, starting_number=1, sort_order="DESC", api_key=None):
     """
     :param dataset:
         USGS dataset (e.g. EO1_HYP_PUB, LANDSAT_8)
@@ -263,6 +269,21 @@ def scene_search(dataset,
         start_date=start_date, end_date=end_date,
         ll=ll, ur=ur, lat=lat, lng=lng, distance=distance, where=where,
         starting_number=starting_number)
+
+    r = session.post(url, payload)
+    response = r.json()
+
+    _check_for_usgs_error(response)
+
+    return response
+
+
+def download_retrieve(downloads, api_key):
+    api_key = _get_api_key(api_key)
+    session = _create_session(api_key)
+
+    url = '{}/download-retrieve'.format(USGS_API)
+    payload = payloads.download_retrieve(downloads)
 
     r = session.post(url, payload)
     response = r.json()

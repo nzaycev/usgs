@@ -180,6 +180,15 @@ def great_circle_dist(lat, lng, dist):
 
     return [math.degrees(lat1), math.degrees(lat2)], [math.degrees(lng1), math.degrees(lng2)]
 
+def download_retrieve(downloads):
+    """
+
+    :param downloads: list<{'entityId', 'productId'}>
+    """
+    payload = {'downloads': downloads,
+                       'label': "download-sample"}
+    return json.dumps(payload)
+
 def scene_search(
     dataset, max_results=None, metadata_type=None, start_date=None,
     end_date=None, ll=None, ur=None,
@@ -214,11 +223,7 @@ def scene_search(
         }
 
     if where:
-        payload["sceneFilter"]["metadataFilter"] = {
-            "filterType": "value",
-            "filterId": where["filter_id"],
-            "value": where["value"],
-            "operand": "="
-        }
+        payload["sceneFilter"]["metadataFilter"] = where
+
 
     return json.dumps(payload)
